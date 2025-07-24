@@ -105,6 +105,7 @@ void CM17RX::samples(const q15_t* samples, uint16_t* rssi, uint8_t length)
     switch (m_state) {
     case M17RXS_LINK_SETUP:
     case M17RXS_STREAM:
+    case M17RXS_PACKET:
       processData(sample);
       break;
     default:
@@ -126,8 +127,9 @@ void CM17RX::processNone(q15_t sample)
 {
   bool ret1 = correlateSync(M17_LINK_SETUP_SYNC_SYMBOLS, M17_LINK_SETUP_SYNC_SYMBOLS_VALUES, M17_LINK_SETUP_SYNC_BYTES, MAX_SYNC_SYMBOL_START_ERRS, MAX_SYNC_BIT_START_ERRS);
   bool ret2 = correlateSync(M17_STREAM_SYNC_SYMBOLS,     M17_STREAM_SYNC_SYMBOLS_VALUES,     M17_STREAM_SYNC_BYTES,     MAX_SYNC_SYMBOL_START_ERRS, MAX_SYNC_BIT_START_ERRS);
+  bool ret3 = correlateSync(M17_PACKET_SYNC_SYMBOLS,     M17_PACKET_SYNC_SYMBOLS_VALUES,     M17_PACKET_SYNC_BYTES,     MAX_SYNC_SYMBOL_START_ERRS, MAX_SYNC_BIT_START_ERRS);
 
-  if (ret1 || ret2) {
+  if (ret1 || ret2 || ret3) {
     // On the first sync, start the countdown to the state change
     if (m_countdown == 0U) {
       m_rssiAccum = 0U;
@@ -142,6 +144,7 @@ void CM17RX::processNone(q15_t sample)
       
       if (ret1) m_nextState = M17RXS_LINK_SETUP;
       if (ret2) m_nextState = M17RXS_STREAM;
+      if (ret3) m_nextState = M17RXS_PACKET;
     }
   }
 
@@ -169,19 +172,27 @@ void CM17RX::processData(q15_t sample)
 
   if (m_minSyncPtr < m_maxSyncPtr) {
     if (m_dataPtr >= m_minSyncPtr && m_dataPtr <= m_maxSyncPtr) {
-      bool ret = correlateSync(M17_STREAM_SYNC_SYMBOLS, M17_STREAM_SYNC_SYMBOLS_VALUES, M17_STREAM_SYNC_BYTES,  MAX_SYNC_SYMBOL_RUN_ERRS, MAX_SYNC_BIT_RUN_ERRS);
+      bool ret1 = correlateSync(M17_LINK_SETUP_SYNC_SYMBOLS, M17_LINK_SETUP_SYNC_SYMBOLS_VALUES, M17_LINK_SETUP_SYNC_BYTES, MAX_SYNC_SYMBOL_START_ERRS, MAX_SYNC_BIT_START_ERRS);
+      bool ret2 = correlateSync(M17_STREAM_SYNC_SYMBOLS, M17_STREAM_SYNC_SYMBOLS_VALUES, M17_STREAM_SYNC_BYTES,  MAX_SYNC_SYMBOL_RUN_ERRS, MAX_SYNC_BIT_RUN_ERRS);
+      bool ret3 = correlateSync(M17_PACKET_SYNC_SYMBOLS, M17_PACKET_SYNC_SYMBOLS_VALUES, M17_PACKET_SYNC_BYTES,  MAX_SYNC_SYMBOL_RUN_ERRS, MAX_SYNC_BIT_RUN_ERRS);
 
       eof = correlateSync(M17_EOF_SYNC_SYMBOLS, M17_EOF_SYNC_SYMBOLS_VALUES, M17_EOF_SYNC_BYTES, MAX_SYNC_SYMBOL_RUN_ERRS, MAX_SYNC_BIT_RUN_ERRS);
 
-      if (ret) m_state = M17RXS_STREAM;
+      if (ret1) m_state = M17RXS_LINK_SETUP;
+      if (ret2) m_state = M17RXS_STREAM;
+      if (ret3) m_state = M17RXS_PACKET;
     }
   } else {
     if (m_dataPtr >= m_minSyncPtr || m_dataPtr <= m_maxSyncPtr) {
-      bool ret = correlateSync(M17_STREAM_SYNC_SYMBOLS, M17_STREAM_SYNC_SYMBOLS_VALUES, M17_STREAM_SYNC_BYTES,  MAX_SYNC_SYMBOL_RUN_ERRS, MAX_SYNC_BIT_RUN_ERRS);
+      bool ret1 = correlateSync(M17_LINK_SETUP_SYNC_SYMBOLS, M17_LINK_SETUP_SYNC_SYMBOLS_VALUES, M17_LINK_SETUP_SYNC_BYTES, MAX_SYNC_SYMBOL_START_ERRS, MAX_SYNC_BIT_START_ERRS);
+      bool ret2 = correlateSync(M17_STREAM_SYNC_SYMBOLS, M17_STREAM_SYNC_SYMBOLS_VALUES, M17_STREAM_SYNC_BYTES,  MAX_SYNC_SYMBOL_RUN_ERRS, MAX_SYNC_BIT_RUN_ERRS);
+      bool ret3 = correlateSync(M17_PACKET_SYNC_SYMBOLS, M17_PACKET_SYNC_SYMBOLS_VALUES, M17_PACKET_SYNC_BYTES,  MAX_SYNC_SYMBOL_RUN_ERRS, MAX_SYNC_BIT_RUN_ERRS);
 
       eof = correlateSync(M17_EOF_SYNC_SYMBOLS, M17_EOF_SYNC_SYMBOLS_VALUES, M17_EOF_SYNC_BYTES, MAX_SYNC_SYMBOL_RUN_ERRS, MAX_SYNC_BIT_RUN_ERRS);
 
-      if (ret) m_state = M17RXS_STREAM;
+      if (ret1) m_state = M17RXS_LINK_SETUP;
+      if (ret2) m_state = M17RXS_STREAM;
+      if (ret3) m_state = M17RXS_PACKET;
     }
   }
 
@@ -222,6 +233,9 @@ void CM17RX::processData(q15_t sample)
       case M17RXS_STREAM:
         DEBUG4("M17RX: stream sync found pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
         break;
+      case M17RXS_PACKET:
+        DEBUG4("M17RX: packet sync found pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
+        break;
       default:
         break;  
     }
@@ -254,6 +268,9 @@ void CM17RX::processData(q15_t sample)
           break;
         case M17RXS_STREAM:
           writeRSSIStream(frame);
+          break;
+        case M17RXS_PACKET:
+          writeRSSIPacket(frame);
           break;
         default:
           break;  
@@ -475,6 +492,27 @@ void CM17RX::writeRSSIStream(uint8_t* data)
   }
 #else
   serial.writeM17Stream(data, M17_FRAME_LENGTH_BYTES + 1U);
+#endif
+
+  m_rssiAccum = 0U;
+  m_rssiCount = 0U;
+}
+
+void CM17RX::writeRSSIPacket(uint8_t* data)
+{
+#if defined(SEND_RSSI_DATA)
+  if (m_rssiCount > 0U) {
+    uint16_t rssi = m_rssiAccum / m_rssiCount;
+
+    data[49U] = (rssi >> 8) & 0xFFU;
+    data[50U] = (rssi >> 0) & 0xFFU;
+
+    serial.writeM17Packet(data, M17_FRAME_LENGTH_BYTES + 3U);
+  } else {
+    serial.writeM17Packet(data, M17_FRAME_LENGTH_BYTES + 1U);
+  }
+#else
+  serial.writeM17Packet(data, M17_FRAME_LENGTH_BYTES + 1U);
 #endif
 
   m_rssiAccum = 0U;
