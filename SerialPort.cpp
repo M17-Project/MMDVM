@@ -121,11 +121,13 @@ const uint8_t MMDVM_DEBUG_DUMP   = 0xFAU;
 #define	HW_TYPE	"MMDVM"
 #endif
 
+// "(M17)" marks the M17 Project's build. It goes at the end: tools read the
+// hardware type, date and GitID before it.
 #if defined(GITVERSION)
-#define concat(h, a, b, c) h " " a " " b " GitID #" c ""
+#define concat(h, a, b, c) h " " a " " b " GitID #" c " (M17)"
 const char HARDWARE[] = concat(HW_TYPE, VERSION, TCXO, GITVERSION);
 #else
-#define concat(h, a, b, c, d) h " " a " " b " (Build: " c " " d ")"
+#define concat(h, a, b, c, d) h " " a " " b " (Build: " c " " d ") (M17)"
 const char HARDWARE[] = concat(HW_TYPE, VERSION, TCXO, __TIME__, __DATE__);
 #endif
 
