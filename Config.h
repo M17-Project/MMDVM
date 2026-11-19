@@ -38,6 +38,9 @@
 #define MODE_NXDN
 #define USE_NXDN_BOXCAR
 
+// Enable M17 support.
+#define MODE_M17
+
 // Enable POCSAG support.
 #define MODE_POCSAG
 
@@ -109,6 +112,9 @@
 
 // Use the YSF and P25 LEDs for NXDN
 // #define USE_ALTERNATE_NXDN_LEDS
+
+// Use the D-Star and P25 LEDs for M17
+#define USE_ALTERNATE_M17_LEDS
 
 // Use the D-Star and DMR LEDs for POCSAG
 #define USE_ALTERNATE_POCSAG_LEDS

@@ -64,6 +64,13 @@ public:
   void writeNXDNLost();
 #endif
 
+#if defined(MODE_M17)
+  void writeM17LinkSetup(const uint8_t* data, uint8_t length);
+  void writeM17Stream(const uint8_t* data, uint8_t length);
+  void writeM17Lost();
+  void writeM17EOT();
+#endif
+
 #if defined(MODE_FM)
   void writeFMData(const uint8_t* data, uint16_t length);
   void writeFMStatus(uint8_t status);

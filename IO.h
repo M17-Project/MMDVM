@@ -46,7 +46,7 @@ public:
   
   void interrupt();
 
-  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel, uint8_t pocsagTXLevel, uint8_t fmTXLevel, int16_t txDCOffset, int16_t rxDCOffset, bool useCOSAsLockout);
+  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t cwIdTXLevel, uint8_t dstarTXLevel, uint8_t dmrTXLevel, uint8_t ysfTXLevel, uint8_t p25TXLevel, uint8_t nxdnTXLevel, uint8_t m17TXLevel, uint8_t pocsagTXLevel, uint8_t fmTXLevel, int16_t txDCOffset, int16_t rxDCOffset, bool useCOSAsLockout);
 
   void getOverflow(bool& adcOverflow, bool& dacOverflow);
 
@@ -108,6 +108,11 @@ private:
 #endif
 #endif
 
+#if defined(MODE_M17)
+  arm_fir_instance_q15 m_rrc05Filter;
+  q15_t                m_rrc05State[70U];         // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
+#endif
+
   bool                 m_pttInvert;
   q15_t                m_rxLevel;
   q15_t                m_cwIdTXLevel;
@@ -116,6 +121,7 @@ private:
   q15_t                m_ysfTXLevel;
   q15_t                m_p25TXLevel;
   q15_t                m_nxdnTXLevel;
+  q15_t                m_m17TXLevel;
   q15_t                m_pocsagTXLevel;
   q15_t                m_fmTXLevel;
 
@@ -152,6 +158,7 @@ private:
   void setP25Int(bool on);
   void setNXDNInt(bool on);
   void setPOCSAGInt(bool on);
+  void setM17Int(bool on);
   void setFMInt(bool on);
   
   void delayInt(unsigned int dly);
