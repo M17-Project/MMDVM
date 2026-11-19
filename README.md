@@ -1,3 +1,22 @@
+This repository adds M17 support back to [G4KLX's MMDVM firmware](https://github.com/g4klx/MMDVM), which removed it in August 2025, and adds M17 packet mode.
+
+## Branches
+
+- **`master`** follows G4KLX's current `master`, with M17 restored on top. It works with both the `master` and `v1.0` branches of [M17-Project/MMDVMHost](https://github.com/M17-Project/MMDVMHost): the serial protocol is the same.
+- **`archived-master`** is this repository's previous `master`: G4KLX's code from January 2025 with M17 packet support. It is kept for reference and no longer updated.
+
+**If you cloned this repository before November 2026:** `master` was replaced with a new history, not updated, so `git pull` on an old clone will fail. If you have no local changes to keep, run:
+
+    git fetch origin
+    git checkout master
+    git reset --hard origin/master
+
+## Building
+
+`build-all.sh` builds the firmware for each supported board from the configurations in `Configs/` and puts the images in `release/`, which WPSD and the M17 hotspot installer use. It needs the ARM GCC toolchain (`gcc-arm-none-eabi` on Debian) and the STM32 library submodules (`git submodule update --init`).
+
+## Original README from upstream
+
 This is the source code of the MMDVM firmware that supports D-Star, DMR, System Fusion, P25, NXDN, M17, POCSAG, and FM modes.
 
 It runs on the Arduino Due, the ST-Micro STM32F4xxx and STM32F7xxx processors, as well as the Teensy 3.5/3.6. What these platforms have in common is the use of an ARM Cortex-M3, M4, or M7 processors with a minimum clock speed greater of 80 MHz, and access to at least one analogue to digital converter, one digital to analogue converter, as well as a number of GPIO pins.
