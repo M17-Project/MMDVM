@@ -31,6 +31,7 @@ bool m_dmrEnable    = true;
 bool m_ysfEnable    = true;
 bool m_p25Enable    = true;
 bool m_nxdnEnable   = true;
+bool m_m17Enable    = true;
 bool m_pocsagEnable = true;
 bool m_fmEnable     = true;
 
@@ -75,6 +76,13 @@ CNXDNRX nxdnRX;
 CNXDNTX nxdnTX;
 
 CCalNXDN calNXDN;
+#endif
+
+#if defined(MODE_M17)
+CM17RX m17RX;
+CM17TX m17TX;
+
+CCalM17 calM17;
 #endif
 
 #if defined(MODE_POCSAG)
@@ -135,6 +143,11 @@ void loop()
     nxdnTX.process();
 #endif
 
+#if defined(MODE_M17)
+  if (m_m17Enable && m_modemState == STATE_M17)
+    m17TX.process();
+#endif
+
 #if defined(MODE_POCSAG)
   if (m_pocsagEnable && (m_modemState == STATE_POCSAG || pocsagTX.busy()))
     pocsagTX.process();
@@ -168,6 +181,11 @@ void loop()
 #if defined(MODE_NXDN)
   if (m_modemState == STATE_NXDNCAL1K)
     calNXDN.process();
+#endif
+
+#if defined(MODE_M17)
+  if (m_modemState == STATE_M17CAL)
+    calM17.process();
 #endif
 
 #if defined(MODE_POCSAG)
