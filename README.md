@@ -17,7 +17,7 @@ This repository adds M17 support back to [G4KLX's MMDVM firmware](https://github
 
 ## Releases for Pi-Star
 
-`scripts/release_build.sh` builds every board in `boards.json` and writes `firmware.json`, the manifest Pi-Star's firmware updater reads, with `SHA256SUMS`. It comes from [MW0MWZ/MMDVM](https://github.com/MW0MWZ/MMDVM), Andy Taylor's fork that Pi-Star uses, so the board ids and the manifest format are the same. The Firmware workflow builds on every push; pushing a tag of the firmware's version from `Version.h` (`v20261119`, or `v20261119-test` for a pre-release) publishes the images, `firmware.json` and `SHA256SUMS` as a GitHub release.
+`scripts/release_build.sh` builds every board in `boards.json` and writes `firmware.json`, the manifest Pi-Star's firmware updater reads, with `SHA256SUMS`. It comes from [MW0MWZ/MMDVM](https://github.com/MW0MWZ/MMDVM), Andy Taylor's fork that Pi-Star uses, so the board ids and the manifest format are the same. The Firmware workflow builds on every push; pushing a tag of G4KLX's firmware version from `Version.h` with `-m17` (`v20260424-m17`; `v20260424-m17.2` for a later M17 release of the same version; `v20260424-m17-test.1` for a pre-release) publishes the images, `firmware.json` and `SHA256SUMS` as a GitHub release.
 
 Pi-Star updates full MMDVM boards from MW0MWZ/MMDVM releases, which have no M17. To get this firmware instead, set the repository in `/etc/pistar-mcp/pistar-mcp.ini`:
 

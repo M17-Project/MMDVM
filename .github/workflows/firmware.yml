@@ -1,8 +1,9 @@
 # Builds the firmware for every board in boards.json on each push. A tag
-# of the firmware's version (Version.h, with a v) publishes the images,
-# firmware.json (the manifest Pi-Star upgrades from) and SHA256SUMS as a
-# GitHub release: v<VERSION> is a release, v<VERSION>-<suffix> (-beta,
-# -test, ...) a pre-release.
+# of the firmware's version (Version.h, with a v and -m17) publishes the
+# images, firmware.json (the manifest Pi-Star upgrades from) and SHA256SUMS
+# as a GitHub release: v<VERSION>-m17[.<n>] is a release,
+# v<VERSION>-m17[.<n>]-<suffix> (-test.1, -beta, ...) a pre-release. See
+# scripts/release_build.sh.
 name: Firmware
 
 on:

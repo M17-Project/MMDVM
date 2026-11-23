@@ -6,11 +6,13 @@
 #
 #   scripts/release_build.sh <output dir> [release tag]
 #
-# A release tag is the firmware's version from Version.h, with a v:
-# v<VERSION> (v20260424) for a release, v<VERSION>-<suffix> (-beta,
-# -test, -rc1, ...) for a pre-release. A tag that does not match Version.h
-# fails the build. Without a tag the build is named v<VERSION>-g<commit>
-# (CI builds and local tests).
+# A release tag is the firmware's version from Version.h (G4KLX's), with a
+# v and -m17: v<VERSION>-m17 (v20260424-m17) for a release, and
+# v<VERSION>-m17.<n> (v20260424-m17.2) for a later M17 release of the same
+# upstream version. Any of those followed by -<suffix> (-test.1, -beta, ...)
+# is a pre-release. A tag that does not match Version.h fails the build.
+# Without a tag the build is named v<VERSION>-m17-g<commit> (CI builds and
+# local tests).
 #
 # Each distinct build (Makefile target, MCU crystal, Config.h options) is
 # made once, from the committed tree (HEAD) in a scratch clone, so the
@@ -43,14 +45,14 @@ fi
 VERSION="v$DATE"
 PRERELEASE=true
 if [ -n "$TAG" ]; then
-	if [[ ! $TAG =~ ^$VERSION(-[A-Za-z0-9][A-Za-z0-9.]*)?$ ]]; then
-		echo "Tag $TAG does not match the firmware version $VERSION (Version.h): use $VERSION or $VERSION-<suffix>" >&2
+	if [[ ! $TAG =~ ^$VERSION-m17(\.[0-9]+)?(-[A-Za-z0-9][A-Za-z0-9.]*)?$ ]]; then
+		echo "Tag $TAG does not match the firmware version $VERSION (Version.h): use $VERSION-m17[.<n>] or $VERSION-m17[.<n>]-<suffix>" >&2
 		exit 1
 	fi
-	[ "$TAG" = "$VERSION" ] && PRERELEASE=false
+	[ -z "${BASH_REMATCH[2]}" ] && PRERELEASE=false
 	RELEASE=$TAG
 else
-	RELEASE="$VERSION-g$SHORT"
+	RELEASE="$VERSION-m17-g$SHORT"
 fi
 
 for lib in STM32F4XX_Lib STM32F7XX_Lib; do
