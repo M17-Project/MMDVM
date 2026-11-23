@@ -1,0 +1,32 @@
+{
+  "_comment": [
+    "Which firmware image each MMDVM board takes. scripts/release_build.sh builds one image per board (<id>.bin) with its Makefile target, and carries these entries into the release's firmware.json with what each image reports and how it can be flashed.",
+    "id: the board's name in Pi-Star (Pi-Star 4's pistar-modemupgrade names where it had the board); aliases: other names for the same board and image.",
+    "target: the Makefile target (the board's pins and MCU). hse: the MCU crystal in Hz, where it is not the Makefile's default for the target. define / undefine: Config.h options set or cleared for this board (Config.h is otherwise upstream's).",
+    "Unlike MMDVM_HS, MMDVM firmware does not name the board in its version string (only the DRCC and Repeater Builder builds do), so Pi-Star asks which board it is, once; what it reports narrows the choice.",
+    "flash: the ways the board can be flashed. stm32flash with gpio: on the Pi's serial port, the STM32's BOOT0 and RESET on these Raspberry Pi GPIO lines (BCM). st-flash: through the ST-LINK on the board's own USB. Any STM32 board on a serial port can also be flashed by hand (BOOT0 set, reset pressed): Pi-Star offers that where no other way applies.",
+    "Facts taken from Pi-Star 4's images (firmware 20221121): ZUM Radio boards have a 12 MHz MCU crystal (the pi and pi-f722 targets' default) and report NO TCXO; every other board an 8 MHz crystal (the Makefile default). GPIO 20/21 is what Pi-Star 4 used for every repeater board on the Pi header. MMDVM_RPT_Hat 0.2 and 0.3 had separate images in Pi-Star 4, as did Repeater Builder V3 and V4: upstream builds one target for each pair, so each pair shares an image here.",
+    "The DRCC boards have no mode LEDs (their pins files have none), so they are built without MODE_LEDS, as Config.h must be for them.",
+    "Every Makefile target must be used by a board, so a target added upstream fails the build until it is mapped here."
+  ],
+  "boards": [
+    {"id": "rpt_mmdvm_pi", "name": "MMDVM-Pi (STM32F446)", "target": "pi", "flash": [{"tool": "stm32flash", "gpio": {"boot0": 20, "reset": 21}}]},
+    {"id": "rpt_zum-0.9", "name": "ZUM Radio-MMDVM for Pi v0.9", "target": "pi", "undefine": ["EXTERNAL_OSC"], "flash": [{"tool": "stm32flash", "gpio": {"boot0": 20, "reset": 21}}]},
+    {"id": "rpt_mmdvm_pi-f722", "name": "MMDVM-Pi (STM32F722)", "target": "pi-f722", "flash": [{"tool": "stm32flash", "gpio": {"boot0": 20, "reset": 21}}]},
+    {"id": "rpt_zum-1.0", "name": "ZUM Radio-MMDVM for Pi v1.0", "target": "pi-f722", "undefine": ["EXTERNAL_OSC"], "flash": [{"tool": "stm32flash", "gpio": {"boot0": 20, "reset": 21}}]},
+    {"id": "rpt_mmdvm_f4m", "name": "MMDVM-F4M Pi-Hat (F0DEI)", "target": "f4m", "flash": [{"tool": "stm32flash", "gpio": {"boot0": 20, "reset": 21}}]},
+    {"id": "rpt_mmdvm_f7m", "name": "MMDVM-F7M Pi-Hat (F0DEI)", "target": "f7m", "flash": [{"tool": "stm32flash", "gpio": {"boot0": 20, "reset": 21}}]},
+    {"id": "rpt_mmdvm_hat", "name": "MMDVM_RPT_Hat v0.2 / v0.3 (F0DEI, DB9MAT, DF2ET)", "aliases": ["rpt_mmdvm_hat-0.2", "rpt_mmdvm_hat-0.3"], "target": "rpt_hat", "flash": [{"tool": "stm32flash", "gpio": {"boot0": 20, "reset": 21}}]},
+    {"id": "rpt_mmdvm_hat_tgo", "name": "MMDVM_RPT_Hat (BG4TGO, STM32F405)", "target": "rpt_hat_tgo", "flash": []},
+    {"id": "rpt_builder_v3", "name": "Repeater Builder STM32-DVM v3 / v4", "aliases": ["rpt_builder_v4"], "target": "dvm", "flash": [{"tool": "stm32flash", "gpio": {"boot0": 20, "reset": 21}}]},
+    {"id": "rpt_builder_v5", "name": "Repeater Builder STM32-DVM v5", "target": "dvm722", "flash": [{"tool": "stm32flash", "gpio": {"boot0": 20, "reset": 21}}]},
+    {"id": "rpt_drcc_nqf", "name": "DRCC_DVM (BG7NQF)", "target": "drcc_nqf", "undefine": ["MODE_LEDS"], "flash": []},
+    {"id": "rpt_drcc_hhp446", "name": "DRCC_DVM (BG5HHP, STM32F446)", "target": "hhp446", "undefine": ["MODE_LEDS"], "flash": []},
+    {"id": "rpt_eda405", "name": "STM32-DVM-MTR2K / MASTR3 (STM32F405)", "target": "eda405", "flash": []},
+    {"id": "rpt_eda446", "name": "STM32-DVM-MTR2K / MASTR3 (STM32F446)", "target": "eda446", "flash": []},
+    {"id": "rpt_nucleo-64", "name": "Nucleo-64 STM32F446RE (Morpho header)", "target": "nucleo", "define": ["STM32F4_NUCLEO_MORPHO_HEADER"], "flash": [{"tool": "st-flash"}, {"tool": "stm32flash", "gpio": {"boot0": 20, "reset": 21}}]},
+    {"id": "rpt_nucleo-64-arduino", "name": "Nucleo-64 STM32F446RE (Arduino header)", "target": "nucleo", "define": ["STM32F4_NUCLEO_ARDUINO_HEADER"], "flash": [{"tool": "st-flash"}]},
+    {"id": "rpt_nucleo-144", "name": "Nucleo-144 STM32F767ZI", "target": "f767", "flash": [{"tool": "st-flash"}, {"tool": "stm32flash", "gpio": {"boot0": 20, "reset": 21}}]},
+    {"id": "rpt_discovery", "name": "STM32F4-Discovery", "target": "dis", "flash": [{"tool": "st-flash"}]}
+  ]
+}

@@ -1,0 +1,81 @@
+# Builds the firmware for every board in boards.json on each push. A tag
+# of the firmware's version (Version.h, with a v and -m17) publishes the
+# images, firmware.json (the manifest Pi-Star upgrades from) and SHA256SUMS
+# as a GitHub release: v<VERSION>-m17[.<n>] is a release,
+# v<VERSION>-m17[.<n>]-<suffix> (-test.1, -beta, ...) a pre-release. See
+# scripts/release_build.sh.
+name: Firmware
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    container: debian:bookworm-slim
+    steps:
+      - name: Install the toolchain
+        run: |
+          apt-get update -qq
+          DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
+            gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib \
+            make git jq binutils bsdextrautils ca-certificates
+          arm-none-eabi-gcc --version | head -1
+
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Build every board
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          scripts/release_build.sh dist "${{ github.ref_type == 'tag' && github.ref_name || '' }}"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: firmware
+          path: dist/
+          if-no-files-found: error
+
+  release:
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: firmware
+          path: dist
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          cd dist
+          sha256sum -c SHA256SUMS
+          gitid=$(jq -r .gitid firmware.json)
+          version=$(jq -r .version firmware.json)
+          if [ "$(jq -r .prerelease firmware.json)" = true ]; then
+            kind=(--prerelease)
+          else
+            kind=(--latest)
+          fi
+          notes="MMDVM firmware ${version#v} with M17, for every STM32 board the Makefile builds, from ${gitid}.
+
+          Each board reports \`GitID #${gitid}\` in its version string. firmware.json maps every board (by its Pi-Star id, from boards.json) to its image, with its Makefile target, MCU, crystal, what it reports, how it can be flashed and its SHA-256; SHA256SUMS covers the images and the manifest."
+          # A re-run of the same tag replaces the release's files
+          if gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release edit "$TAG" -R "$GITHUB_REPOSITORY" --title "$TAG" "${kind[@]}" --notes "$notes"
+            gh release upload "$TAG" -R "$GITHUB_REPOSITORY" --clobber -- *.bin firmware.json SHA256SUMS
+          else
+            gh release create "$TAG" -R "$GITHUB_REPOSITORY" --title "$TAG" "${kind[@]}" --notes "$notes" \
+              -- *.bin firmware.json SHA256SUMS
+          fi

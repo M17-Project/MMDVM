@@ -15,6 +15,15 @@ This repository adds M17 support back to [G4KLX's MMDVM firmware](https://github
 
 `build-all.sh` builds the firmware for each supported board from the configurations in `Configs/` and puts the images in `release/`, which WPSD and the M17 hotspot installer use. It needs the ARM GCC toolchain (`gcc-arm-none-eabi` on Debian) and the STM32 library submodules (`git submodule update --init`).
 
+## Releases for Pi-Star
+
+`scripts/release_build.sh` builds every board in `boards.json` and writes `firmware.json`, the manifest Pi-Star's firmware updater reads, with `SHA256SUMS`. It comes from [MW0MWZ/MMDVM](https://github.com/MW0MWZ/MMDVM), Andy Taylor's fork that Pi-Star uses, so the board ids and the manifest format are the same. The Firmware workflow builds on every push; pushing a tag of G4KLX's firmware version from `Version.h` with `-m17` (`v20260424-m17`; `v20260424-m17.2` for a later M17 release of the same version; `v20260424-m17-test.1` for a pre-release) publishes the images, `firmware.json` and `SHA256SUMS` as a GitHub release.
+
+Pi-Star updates full MMDVM boards from MW0MWZ/MMDVM releases, which have no M17. To get this firmware instead, set the repository in `/etc/pistar-mcp/pistar-mcp.ini`:
+
+    [firmware]
+    repo_mmdvm=M17-Project/MMDVM
+
 ## Original README from upstream
 
 This is the source code of the MMDVM firmware that supports D-Star, DMR, System Fusion, P25, NXDN, M17, POCSAG, and FM modes.
