@@ -9,9 +9,11 @@
 # A release tag is the firmware's version from Version.h (G4KLX's), with a
 # v and -m17: v<VERSION>-m17 (v20260424-m17) for a release, and
 # v<VERSION>-m17.<n> (v20260424-m17.2) for a later M17 release of the same
-# upstream version. Any of those followed by -<suffix> (-test.1, -beta, ...)
-# is a pre-release. A tag that does not match Version.h fails the build.
-# Without a tag the build is named v<VERSION>-m17-g<commit> (CI builds and
+# upstream version. Either followed by .<label>.<n> (v20260424-m17.test.1,
+# v20260424-m17.2.beta.1) is a pre-release. Pi-Star only reads tags with
+# one hyphen (v<8 digits>-<letters, digits and dots>), so the label is
+# joined with dots. A tag that does not match Version.h fails the build.
+# Without a tag the build is named v<VERSION>-m17.g<commit> (CI builds and
 # local tests).
 #
 # Each distinct build (Makefile target, MCU crystal, Config.h options) is
@@ -45,14 +47,14 @@ fi
 VERSION="v$DATE"
 PRERELEASE=true
 if [ -n "$TAG" ]; then
-	if [[ ! $TAG =~ ^$VERSION-m17(\.[0-9]+)?(-[A-Za-z0-9][A-Za-z0-9.]*)?$ ]]; then
-		echo "Tag $TAG does not match the firmware version $VERSION (Version.h): use $VERSION-m17[.<n>] or $VERSION-m17[.<n>]-<suffix>" >&2
+	if [[ ! $TAG =~ ^$VERSION-m17(\.[0-9]+)?(\.[A-Za-z][A-Za-z0-9]*\.[0-9]+)?$ ]]; then
+		echo "Tag $TAG does not match the firmware version $VERSION (Version.h): use $VERSION-m17[.<n>] for a release or $VERSION-m17[.<n>].<label>.<n> for a pre-release" >&2
 		exit 1
 	fi
 	[ -z "${BASH_REMATCH[2]}" ] && PRERELEASE=false
 	RELEASE=$TAG
 else
-	RELEASE="$VERSION-m17-g$SHORT"
+	RELEASE="$VERSION-m17.g$SHORT"
 fi
 
 for lib in STM32F4XX_Lib STM32F7XX_Lib; do

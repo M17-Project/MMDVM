@@ -2,7 +2,7 @@
 # of the firmware's version (Version.h, with a v and -m17) publishes the
 # images, firmware.json (the manifest Pi-Star upgrades from) and SHA256SUMS
 # as a GitHub release: v<VERSION>-m17[.<n>] is a release,
-# v<VERSION>-m17[.<n>]-<suffix> (-test.1, -beta, ...) a pre-release. See
+# v<VERSION>-m17[.<n>].<label>.<n> (.test.1, .beta.1) a pre-release. See
 # scripts/release_build.sh.
 name: Firmware
 
