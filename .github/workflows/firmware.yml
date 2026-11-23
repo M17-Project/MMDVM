@@ -67,7 +67,7 @@ jobs:
           else
             kind=(--latest)
           fi
-          notes="MMDVM firmware ${version#v} for every STM32 board the Makefile builds, from ${gitid}.
+          notes="MMDVM firmware ${version#v} with M17, for every STM32 board the Makefile builds, from ${gitid}.
 
           Each board reports \`GitID #${gitid}\` in its version string. firmware.json maps every board (by its Pi-Star id, from boards.json) to its image, with its Makefile target, MCU, crystal, what it reports, how it can be flashed and its SHA-256; SHA256SUMS covers the images and the manifest."
           # A re-run of the same tag replaces the release's files
