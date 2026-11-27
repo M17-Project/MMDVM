@@ -42,6 +42,9 @@ const uint8_t M17_START_SYNC = 0x77U;
 const uint8_t M17_END_SYNC   = 0xFFU;
 const uint8_t M17_HANG       = 0x00U;
 
+// One frame (40 ms) of preamble before an LSF sent while the transmitter is on
+const uint16_t M17_PREAMBLE_LENGTH_BYTES = M17_FRAME_LENGTH_BYTES;
+
 CM17TX::CM17TX() :
 m_buffer(TX_BUFFER_LEN),
 m_modFilter(),
@@ -68,15 +71,30 @@ void CM17TX::process()
     if (!m_tx) {
       for (uint16_t i = 0U; i < m_txDelay; i++)
         m_poBuffer[m_poLen++] = M17_START_SYNC;
+      m_poPtr = 0U;
     } else {
+      // Read the frame in after room for a preamble.
+      m_poLen = M17_PREAMBLE_LENGTH_BYTES;
       for (uint8_t i = 0U; i < M17_FRAME_LENGTH_BYTES; i++) {
         uint8_t c = 0U;
         m_buffer.get(c);
         m_poBuffer[m_poLen++] = c;
       }
-    }
 
-    m_poPtr = 0U;
+      // A transmission that starts while the transmitter is still on (in the
+      // hang, or straight after another one) would otherwise go out with no
+      // preamble, only its LSF. A receiver can join a voice stream late, but
+      // it can't recover a packet without the LSF, so send a preamble before
+      // every LSF, as the M17 spec asks. Other frames go out as they are.
+      if (m_poBuffer[M17_PREAMBLE_LENGTH_BYTES + 0U] == M17_LINK_SETUP_SYNC_BYTES[0U] &&
+          m_poBuffer[M17_PREAMBLE_LENGTH_BYTES + 1U] == M17_LINK_SETUP_SYNC_BYTES[1U]) {
+        for (uint16_t i = 0U; i < M17_PREAMBLE_LENGTH_BYTES; i++)
+          m_poBuffer[i] = M17_START_SYNC;
+        m_poPtr = 0U;
+      } else {
+        m_poPtr = M17_PREAMBLE_LENGTH_BYTES;
+      }
+    }
   }
 
   if (m_poLen > 0U) {
